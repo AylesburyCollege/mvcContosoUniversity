@@ -7,6 +7,7 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using mvcContosoUniversity.Models;
+using PagedList;
 
 namespace mvcContosoUniversity.Controllers
 {
@@ -15,10 +16,21 @@ namespace mvcContosoUniversity.Controllers
         private ContosoContext db = new ContosoContext();
 
         // GET: Students
-        public ActionResult Index(string sortOrder, string searchString)
+        public ActionResult Index(string sortOrder, string currentFiler, string searchString, int? page)
         {
+            ViewBag.CurrentSort = sortOrder;
+
             ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewBag.DateSortParm = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if(searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFiler;
+            }
 
             var students = from s in db.Students
                            select s;
@@ -44,7 +56,11 @@ namespace mvcContosoUniversity.Controllers
                     students = students.OrderBy(s => s.LastName);
                     break;
             }
-            return View(students.ToList());
+
+            int pageSize = 3;
+            int pageNumber = (page ?? 1);
+
+            return View(students.ToPagedList(pageNumber, pageSize));
         }
 
         // GET: Students/Details/5
